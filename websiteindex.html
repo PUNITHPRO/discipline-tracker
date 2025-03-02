@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discipline Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        .tracker {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .goal {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        input[type="checkbox"] {
+            transform: scale(1.5);
+        }
+        .progress {
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: green;
+            transition: width 0.5s;
+        }
+        .streak {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #big-timer {
+            font-size: 36px;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .timer-controls button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .calendar {
+            margin-top: 20px;
+        }
+        .calendar-day {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 50%;
+            background-color: lightgray;
+        }
+        .calendar-day.success {
+            background-color: lightgreen;
+        }
+        .calendar-day.fail {
+            background-color: lightcoral;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Discipline Tracker</h1>
+
+<div class="tracker">
+    <div class="goal"><span>Wake Up Early</span><input type="checkbox" class="goal-checkbox"></div>
+    <div class="goal"><span>Exercise</span><input type="checkbox" class="goal-checkbox"></div>
+    <div class="goal"><span>Limit Instagram</span><input type="checkbox" class="goal-checkbox"></div>
+
+    <div class="progress">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="streak">Current Streak: <span id="streak-count">0</span> days</div>
+
+    <div id="big-timer">00:00:00</div>
+    <div class="timer-controls">
+        <button onclick="startStopwatch()">Start Timer</button>
+        <button onclick="stopStopwatch()">Stop Timer</button>
+        <button onclick="resetStopwatch()">Reset Timer</button>
+    </div>
+
+    <div class="calendar" id="calendar"></div>
+</div>
+
+<script>
+    const goalCheckboxes = document.querySelectorAll('.goal-checkbox');
+    const progressBar = document.getElementById('progress-bar');
+    const streakCount = document.getElementById('streak-count');
+    const calendar = document.getElementById('calendar');
+    
+    let streak = 0;
+    let stopwatchInterval;
+    let stopwatchSeconds = 0;
+
+    function updateProgress() {
+        const completed = Array.from(goalCheckboxes).filter(checkbox => checkbox.checked).length;
+        const progress = (completed / goalCheckboxes.length) * 100;
+        progressBar.style.width = progress + '%';
+
+        if (completed === goalCheckboxes.length) {
+            streak++;
+            updateCalendar(true);
+        } else {
+            updateCalendar(false);
+            streak = 0;
+        }
+        streakCount.textContent = streak;
+        localStorage.setItem('streak', streak);
+    }
+
+    function loadStreak() {
+        const savedStreak = localStorage.getItem('streak');
+        if (savedStreak) {
+            streak = parseInt(savedStreak);
+            streakCount.textContent = streak;
+        }
+    }
+
+    function updateCalendar(success) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day ' + (success ? 'success' : 'fail');
+        day.textContent = new Date().getDate();
+        calendar.appendChild(day);
+    }
+
+    goalCheckboxes.forEach(checkbox => checkbox.addEventListener('change', updateProgress));
+    loadStreak();
+
+    // Stopwatch functions
+    function startStopwatch() {
+        clearInterval(stopwatchInterval);
+        stopwatchInterval = setInterval(() => {
+            stopwatchSeconds++;
+            updateStopwatchDisplay();
+        }, 1000);
+    }
+
+    function stopStopwatch() {
+        clearInterval(stopwatchInterval);
+    }
+
+    function resetStopwatch() {
+        clearInterval(stopwatchInterval);
+        stopwatchSeconds = 0;
+        updateStopwatchDisplay();
+    }
+
+    function updateStopwatchDisplay() {
+        const hours = Math.floor(stopwatchSeconds / 3600);
+        const minutes = Math.floor((stopwatchSeconds % 3600) / 60);
+        const seconds = stopwatchSeconds % 60;
+        document.getElementById('big-timer').textContent =
+            `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+</script>
+
+</body>
+</html>
